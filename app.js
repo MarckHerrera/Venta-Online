@@ -6,9 +6,8 @@ const app = express();
 var usuarioRoutes = require("./src/routes/usuario.routes");
 var productoRoutes = require("./src/routes/producto.routes");
 var categoriaRoutes = require("./src/routes/categoria.routes");
-var facturaRoutes = require("./src/routes/factura.routes");
-
-
+var carritoRoutes = require("./src/routes/carrito.routes");
+/*var facturaRoutes = require("./src/routes/factura.routes");*/
 
 
 // MIDDLEWARES
@@ -19,6 +18,6 @@ app.use(express.json());
 app.use(cors());
 
 // CARGA DE RUTAS localhost:3000/api/
-app.use('/api', usuarioRoutes, productoRoutes, categoriaRoutes,/* facturaRoutes*/);
+app.use('/api', usuarioRoutes, productoRoutes, categoriaRoutes, carritoRoutes/* facturaRoutes*/);
 
 module.exports = app;
