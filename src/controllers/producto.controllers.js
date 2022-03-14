@@ -10,18 +10,20 @@ function agregarProducto(req, res) {
 
     Producto.find({ nombre: parametros.nombre }, (err, productoEncontrado) => {
         if (productoEncontrado.length > 0) {
-            return res.status(500).send({ mensaje: 'Este producto ya existe, no necesitamos mas de el' });
+            return res.status(500).send({ mensaje: 'Este producto ya existe' });
         } else {
             if (parametros.nombre) {
-                productoModel.nombre = params.nombre;
-                productoModel.precio = params.precio;
-                productoModel.cantidad = params.cantidad;
+                productoModel.nombre = parametros.nombre;
+                productoModel.precio = parametros.precio;
+                productoModel.cantidad = parametros.cantidad;
 
                 productoModel.save((err, productoGuardado) => {
                     if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
                     if (!productoGuardado) {
                         res.status(404).send({ mensaje: 'No se pudo registrar el producto' })
                     }
+
+                    return res.status(200).send({ producto: productoGuardado });
                 })
             } else {
                 return res.status(400).send({ mensaje: 'Debe de ingresar parametros obligatorios' });

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const CategoriaSchema = Schema({
+const CarritosSchema = Schema({
     idUsuario: { type: Schema.Types.ObjectId, ref: 'Usuarios'},
     
     Productos: [{
@@ -11,4 +11,4 @@ const CategoriaSchema = Schema({
     }]
 });
 
-module.exports = mongoose.model('Categorias', CategoriaSchema);
+module.exports = mongoose.model('Carritos', CarritosSchema);
