@@ -119,6 +119,17 @@ function obtenerProductosXNombre(req, res) {
         })
 }
 
+function productosMasVendidos(req, res) {
+
+    Producto.find({ cantidad: {$regex: 0} }),(err, productos) => {
+        if(err) return res.status(500).send({ mensaje: 'Error en  la peticion'});
+        if(!productos) return res.status(500)
+            .send({ mensaje: 'Error al obtener los productos'})
+
+        return res.status(200).send({ productos: productos })
+    }
+}
+
 module.exports = {
     agregarProducto,
     eliminarProducto,
@@ -126,6 +137,7 @@ module.exports = {
     obtenerProductosXCategoria,
     productosAgotados,
     stockProductos,
-    obtenerProductosXNombre
+    obtenerProductosXNombre,
+    productosMasVendidos
 
 }
