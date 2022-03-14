@@ -19,6 +19,6 @@ app.use(express.json());
 app.use(cors());
 
 // CARGA DE RUTAS localhost:3000/api/
-app.use('/api', usuarioRoutes, productoRoutes, categoriaRoutes, facturaRoutes);
+app.use('/api', usuarioRoutes, productoRoutes, categoriaRoutes,/* facturaRoutes*/);
 
 module.exports = app;

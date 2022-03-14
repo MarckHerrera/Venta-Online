@@ -48,7 +48,7 @@ function RegistrarCliente(req, res) {
                 modeloUsuario.apellido = parametros.apellido;
                 modeloUsuario.email = parametros.email;
                 modeloUsuario.password = parametros.password;
-                modeloUsuario.rol = 'Empresa';
+                modeloUsuario.rol = 'Cliente';
 
                 bcrypt.hash(parametros.password, null, null, (err, passwordEncripatada) => {
                     modeloUsuario.password = passwordEncripatada;
@@ -116,32 +116,35 @@ function Login(req, res) {
 }
 
 
-
 function EditarUsuario(req, res) {
+    var idUsu = req.params.idUsuario;
     var parametros = req.body;
 
-    if (req.user.rol !== 'Admin') {
-        return res.status(500).send({ mensaje: 'No tiene los permisos para editar este Curso.' });
-    }
+    Usuario.findOne({ _id: idUsu, rol: 'Cliente' }, (err, usuarioEncontrado) => {
+
+        if (!usuarioEncontrado) {
+            return res.status(500).send({ mensaje: 'Solo se pueden editar Clientes' });
+        } else {
+
     // borrar la propiedad de password
     delete parametros.password
 
-    Usuario.findByIdAndUpdate(req.params.idUsuario, parametros, { new: true }, (err, usuarioEditado) => {
+    Usuario.findByIdAndUpdate(idUsu, parametros, { new: true }, (err, usuarioEditado) => {
         if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
         if (!usuarioEditado) return res.status(500).send({ mensaje: 'Error al editar el Usuario' });
 
         return res.status(200).send({ usuario: usuarioEditado });
 
-
+    
     })
-
 }
-
+})
+}
 
 
 module.exports = {
     RegistrarAdmin,
-    RegistrarEmpresa,
+    RegistrarCliente,
     EditarUsuario,
     EliminarUsuario,
     Login
