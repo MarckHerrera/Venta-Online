@@ -3,60 +3,65 @@ const Producto = require('../models/productos.model');
 
 
 function carrito(req, res) {
-    var idPro = req.body.idProducto;
-    var idUsu = req.user.sub;
-    var cantidad = req.body.cantidad;
+    var parametros = req.body;
+    var usuarioId = req.user.sub;
+    const data = {
+        producto: parametros.producto,
+        cantidad: parametros.cantidad
+    };
 
-    Producto.findById({ _id: idPro }, (err, productoEn) => {
-        if (err) return res.status(500).send({ message: 'error en la peticion' })
-        if (!productoEn) return res.status(404).send({ message: 'error al listar' })
+    Producto.findOne({_id: data.producto},(err, productoFO)=>{
+        if (data.cantidad > productoFO.cantidad) {
+            return res.status(200).send({message: 'No hay productos suficientes'});
+        }
 
-        Carrito.find({ idUsuario: idUsu, "Productos.idProducto": idPro }, (err, producto) => {
+    Carrito.findOne({usuarioId},(err, UsuCarrito)=>{
+        if(!UsuCarrito){
+            data.usuario = usuarioId;
+            data.subtotal = productoFO.precio * data.cantidad;
+            data.total = data.subtotal;
 
-            if (err) return res.status(500).send({ message: 'error en la petician' })
+            var carritoModel = new Carrito(data);
 
-            if (producto == 0) {
+            carritoModel.save((err, carritoG)=>{
+                if (err) {
+                    return res.status(500).send({ mensaje: 'Error en la peticion' });
+                }
+                
+                Carrito.findOne({usuario: usuarioId},(err, UsuarioIgual)=>{
+                    Carrito.findOneAndUpdate({_id: UsuarioIgual._id},{$push: {productos: data}}, {new: true},(err, carritoConparado)=>{
+                        return res.status(200).send({carrito: carritoConparado});
+                    }).populate("productos.producto").lean();
+                })
+            });
+        }else{
+            Carrito.findOne({usuario: usuarioId},(err, UsuarioIgual)=>{
+                data.subtotal = productoFO.precio * data.cantidad;
+                data.total = data.subtotal + UsuarioIgual.total;
 
-                if (productoEn.cantidad < cantidad) return res.status(500).send({ message: 'Insuficiente producto' })
-
-                var total = productoEn.precio * cantidad;
-
-                Carrito.findByIdAndUpdate({ idUsuario: idUsu },
-                    { $push: { Productos: { idProducto: idPro, cantidad: cantidad, total: total } } },
-                    { new: true }, (err, ingresar) => {
-                        productoEn
-
-                        if (err) return res.status(500).send({ message: 'Error en la peticion Uptdate' });
-                        if (!ingresar) return res.status(404).send({ message: 'error Update' });
-
-                        return res.status(200).send({ carrito: ingresar })
-                    })
-            } else {
-                Carrito.findOne({ idUsuario: idUsu, "Productos.idProducto": idPro },
-                    { "Productos.$.cantidad": 1, _id: 0 }, (err, cantidad) => {
-
-                        var a = cantidad.Carrito[0].cantidad + Number(cantidad);
-                        var s = cantidad.Carrito[0].precio * cantidad;
-
-                        if (a > stockProducto) return res.status(404).send({ message: 'No hay productos' })
-
-                        Carrito.updateOne({ idUsuario: idUsu, Productos: { $elemMatch: { idProducto: idPro } } },
-                            { $inc: { "Productos.$.cantidad": cantidad, "Productos.$.subTotal": s } }, (err, cantidad) => {
-
-                                if (err) return res.status(500).send({ message: 'Error en la peticion Usuario' })
-                                if (!cantidad) return res.status(404).send({ message: 'error al actualizar productos' })
-
-                                Carrito.findById({ idUsuario: idUsu}, (err, usuarioEncontrado) => {
-                                    
-                                    return res.status(200).send({ Usuario: usuarioEncontrado })
-                                })
-                            })
-                    })
-            }
+                Carrito.findOneAndUpdate({_id: UsuarioIgual._id},{$push: {productos: data}, total: data.total},{ new: true},(err, carritoActualizado)=>{
+                    return res.status(200).send({carrito: carritoActualizado})
+                })
+            }).populate("productos.producto").lean();
+        }
         })
-    })
+        
+    });
 }
 
+function carritoEliminar(req, res) {
+    var usuarioId = req.user.sub;
+
+    Carrito.findOneAndDelete({ usuario: usuarioId },(err, cEliminado) => {
+        if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+        if (!cEliminado) return res.status(500).send({ mensaje: "Error al eliminar carrito" });
+  
+        return res.status(200).send({ carritoEliminado: eliminarCarrito });
+      }).lean();
+  }
+
 module.exports = {
-    carrito
+    carrito,
+    carritoEliminar
+
 }

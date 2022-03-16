@@ -1,57 +1,62 @@
 const Factura = require("../models/facturas.model");
+const Carrito = require("../models/carritos.model");
+const Productos = require("../models/productos.model");
 
-function CrearFactura(req, res) {
-    var facturaModel = new Factura();
-    var params = req.body;
+function factura(req, res) {
+    var usuarioId = req.user.sub;
 
-    if (params.idUsuario) {
-        facturaModel.idUsuario = params.idUsuario;
-        facturaModel.total = 0;
-        facturaModel.editable = "si";
-        facturaModel.save((err, guardada) => {
-            if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-            if (!guardada) return res.status(500).send({ mensaje: 'Error agregando la encuesta' });
+  Carrito.findOne({ usuario: usuarioId }, (err, buscarCarrito) => {
+    if (buscarCarrito == null) return res.status(500).send({ mensaje: "No hay productos" });
+    {
+      
+      for (let carrito of buscarCarrito.productos) {
+        Productos.findOne({ _id: carrito.producto._id }, (err, productoId) => {
+          const cantidad = carrito.cantidad;
+          const data = {
+            stock: productoId.stock,};
 
-            return res.status(200).send({ guardada })
-        })
-    } else {
-        return res.status(500).send({ mensaje: "Llene todos los datos que sean necesarios" })
+          data.stock = productoId.stock - cantidad;
+          Productos.findOneAndUpdate({ _id: carrito.producto._id },data,{ new: true },(err, actualizarProducto) => {
+
+          }).lean();
+        }).lean();
+      }
+      const factura = new Factura(buscarCarrito);
+      factura.save((err, guardado) => {
+        Carrito.findOneAndDelete({ usuario: usuarioId },(err, eliminarCarrito) => {
+            return res.status(200).send({ factura: factura });
+          });
+      });
     }
+  }).lean();
 }
 
-function CancelarFactura(req, res) {
-    var params = req.body;
 
-    Factura.findOne({ _id: params.idFactura }).exec(
-        (err, factura) => {
-            if (err) {
-                console.log(err);
-            } else {
-                if (factura.editable == "no") {
-                    return res.status(500).send({ mensaje: "No se puede Eliminar o editar una factura" });
-                } else {
-                    Factura.findByIdAndDelete(params.idFactura, (err, Eliminado) => {
-                        if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
-                        if (!Eliminado) return res.status(500).send({ mensaje: "No se pudo cancelar la factura, verifique el id" });
-                        return res.status(200).send({ mensaje: "Se cancelo la factura" });
-                    })
-                }
-            }}
-    )}
+function verFactura(req, res) {
+    var usuarioId = req.user.sub;
 
-function FinalzarFactura(req, res) {
-    var params = req.body;
-    var final = {};
-    final['editable'] = "no";
-    Factura.findByIdAndUpdate(params.idFactura, final, { new: true }, (err, productoActualizado) => {
-        if (err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-        if (!productoActualizado) return res.status(500).send({ mensaje: 'No pudo editar el producto' });
-        return res.status(200).send({ productoActualizado })
-    })
+  Factura.find({ usuario: usuarioId }, (err, facturaEncontrada) => {
+    if (facturaEncontrada.length == 0) return res.status(404).send({ mensaje: "No hay compras" });
+    if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+    if (!facturaEncontrada)return res.status(500).send({ mensaje: "Error al buscar la factura" });
+
+    return res.status(200).send({ Compras: facturaEncontrada });
+  })
+    .populate("productos.producto")
+    .lean();
 }
 
+function todasLasFacturas(req, res) {
+    Factura.find({}, (err, buscarFacturas) => {
+        if (buscarFacturas.length == 0) return res.status(404).send({ mensaje: "No hay compras" });
+        if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+        if (!buscarFacturas) return res.status(500).send({ mensaje: "Error al encontrar todas las facturas" });
+    
+        return res.status(200).send({ Compras: buscarFacturas });
+      }).populate("productos.producto").lean();
+    }
 module.exports = {
-    CrearFactura,
-    CancelarFactura,
-    FinalzarFactura
+    factura,
+    verFactura,
+    todasLasFacturas
 }

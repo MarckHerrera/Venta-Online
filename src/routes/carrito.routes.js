@@ -4,6 +4,7 @@ const md_authentication = require('../middlewares/autenticacion');
 
 const api = express.Router();
 
-api.put('/carrito', md_authentication.Auth, controladorCarrito.carrito);
+api.post('/carrito', md_authentication.Auth, controladorCarrito.carrito);
+api.delete('/carritoEliminar', md_authentication.Auth, controladorCarrito.carritoEliminar);
 
 module.exports = api;

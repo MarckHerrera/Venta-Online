@@ -5,8 +5,8 @@ const md_authentication = require('../middlewares/autenticacion');
 
 const api = express.Router();
 
-api.post("/CrearFactura",md_authentication.Auth, facturaControlador.CrearFactura);
-api.delete("/CancelarFactura",md_authentication.Auth, facturaControlador.CancelarFactura);
-api.put('/FinalzarFactura',md_authentication.Auth, facturaControlador.FinalzarFactura);
+api.get('/factura', md_authentication.Auth, facturaControlador.factura);
+api.get('/verFactura', md_authentication.Auth, facturaControlador.verFactura);
+api.get('/verTodasLasFacturas', md_authentication.Auth, facturaControlador.todasLasFacturas);
 
 module.exports = api;
